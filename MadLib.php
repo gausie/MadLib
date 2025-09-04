@@ -2,6 +2,10 @@
 if ( ! defined( 'MEDIAWIKI' ) )
     die();
 
+use MediaWiki\MediaWikiServices;
+use MediaWiki\Title\Title;
+use MediaWiki\Revision\SlotRecord;
+
 /**
  * A parser extension that enables "madlib" style constructions.  It provides
  * the #madlib magic word, which converts a pattern string into a new string
@@ -199,9 +203,11 @@ function MadLibExtensionCleanPage($p) {
 function MadLibExtensionGetPage($t) {
     $title = Title::newFromText($t);
     if(is_object($title)) {
-        $r = Revision::newFromTitle($title);
-        if(is_object($r))
-            return ContentHandler::getContentText($r->getContent());
+        $revisionLookup = MediaWikiServices::getInstance()->getRevisionLookup();
+        $r = $revisionLookup->getRevisionByTitle($title);
+        if(is_object($r)) {
+            return ContentHandler::getContentText($r->getContent(SlotRecord::MAIN));
+        }
     }
     return "";
 }
